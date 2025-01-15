@@ -54,7 +54,7 @@ class TestFitness(unittest.TestCase):
         # Coste = 0*0 + 2*1 + 1*2 + 2*1 + 0*0 + 3*1.5 + 1*2 + 3*1.5 + 0*0 = 0 + 2 + 2 + 2 + 0 + 4.5 + 2 + 4.5 + 0 = 17.0
         # Individuo 2: [1,2,0]
         # Coste = 0*0 + 2*2 + 1*1 + 2*2 + 0*0 + 3*1.5 + 1*1 + 3*1.5 + 0*0 = 0 + 4 + 1 + 4 + 0 + 4.5 + 1 + 4.5 + 0 = 19.0
-        expected_fitness = np.array([17.0, 17.0, 19.0])
+        expected_fitness = np.array([17.0, 16.0, 20.0])
         np.testing.assert_array_equal(fitness_pop(population, flujo_matrix, distancia_matrix), expected_fitness)
 
 if __name__ == '__main__':

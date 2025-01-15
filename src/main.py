@@ -4,12 +4,15 @@ import argparse
 import logging
 import os
 import sys
+import random
+import json
+import numpy as np
 
 from src.genetic_algorithm import ejecutar_algoritmo_genetico
 from src.baldwinian_ga import ejecutar_varianta_baldwiniana
 from src.lamarckian_ga import ejecutar_varianta_lamarckiana
 from src.utils import cargar_datos
-from src.plotting import graficar_historial
+from src.plotting import graficar_historial, graficar_comparativa
 
 
 def configurar_logging(ruta_salida):
@@ -48,6 +51,36 @@ def guardar_resultados(mejor_solucion, ruta_salida):
         logging.error(f"Error al guardar la mejor solución: {e}")
 
 
+def guardar_historial(historial, ruta_salida, variant):
+    """
+    Guarda el historial de fitness en un archivo JSON.
+
+    Args:
+        historial (list o numpy.ndarray): Lista de valores de fitness por generación.
+        ruta_salida (str): Directorio donde se guardará el archivo.
+        variant (str): Nombre de la variante del Algoritmo Genético.
+    """
+    archivo_historial = os.path.join(ruta_salida, f'historial_fitness_{variant}.json')
+    try:
+        with open(archivo_historial, 'w', encoding='utf-8') as f:
+            json.dump(historial, f, indent=4)
+        logging.info(f"Historial de fitness guardado en {archivo_historial}")
+    except Exception as e:
+        logging.error(f"Error al guardar el historial de fitness: {e}")
+
+
+def fijar_semilla(seed):
+    """
+    Fija la semilla para los generadores de números aleatorios.
+
+    Args:
+        seed (int): Valor de la semilla.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    logging.info(f"Semilla fijada en: {seed}")
+
+
 def main():
     # Definir argumentos de línea de comandos
     parser = argparse.ArgumentParser(description='Algoritmos Genéticos para el Problema de Asignación Cuadrática (QAP)')
@@ -70,6 +103,8 @@ def main():
                         help='Tasa de mutación')
     parser.add_argument('--elitismo', action='store_true',
                         help='Activar elitismo')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Semilla para los generadores de números aleatorios')
 
     args = parser.parse_args()
 
@@ -79,6 +114,13 @@ def main():
     # Configurar logging
     configurar_logging(args.output)
     logging.info("Inicio de la ejecución del Algoritmo Genético")
+
+    # Fijar la semilla si se proporcionó
+    if args.seed is not None:
+        fijar_semilla(args.seed)
+    else:
+        # Opcional: fijar una semilla predeterminada o dejarla aleatoria
+        logging.info("No se proporcionó semilla. Usando una semilla aleatoria.")
 
     # Cargar datos
     try:
@@ -115,6 +157,9 @@ def main():
 
     # Guardar resultados
     guardar_resultados(mejor_solucion, args.output)
+
+    # Guardar historial de fitness
+    guardar_historial(historial, args.output, variant=args.variant)
 
     # Graficar historial de fitness
     try:

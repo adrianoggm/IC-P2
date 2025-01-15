@@ -3,8 +3,8 @@
 # Descripción:
 # Ejecuta el Algoritmo Genético Estándar para el QAP utilizando el archivo de datos tai256c.dat.
 # Los resultados se guardarán en el directorio results/standard_ga/
+# Puedes especificar una semilla opcional.
 
-# Función para manejar errores
 function Handle-Error {
     param([string]$message)
     Write-Error $message
@@ -15,20 +15,51 @@ function Handle-Error {
 $Variant = "standard"
 $DataFile = "data/raw/tai256c.dat"
 $OutputDir = "results/standard_ga/"
+$Population = 100
+$Generations = 500
+$CrossoverRate = 0.8
+$MutationRate = 0.02
+$Elitismo = $true
+$Seed = 42  # Especifica una semilla fija o cámbiala a $null para una semilla aleatoria
 
 # Crear el directorio de salida si no existe
 New-Item -ItemType Directory -Path $OutputDir -Force
 
 # Activar entorno virtual
-& "venv\Scripts\Activate.ps1" -ErrorAction Stop || Handle-Error "No se pudo activar el entorno virtual."
+try {
+    & "venv\Scripts\Activate.ps1" -ErrorAction Stop
+} catch {
+    Handle-Error "No se pudo activar el entorno virtual."
+}
 
 Write-Host "===== Inicio del Algoritmo Genético Estándar ====="
 
 # Ejecutar el script principal con los parámetros adecuados
-python src/main.py --variant $Variant `
-                   --data $DataFile `
-                   --output $OutputDir *>&1 | Out-File "$OutputDir\ejecucion.log" -Encoding utf8
-if ($LASTEXITCODE -ne 0) {
+try {
+    if ($Seed -ne $null) {
+        python src/main.py `
+            --variant $Variant `
+            --data $DataFile `
+            --output $OutputDir `
+            --population $Population `
+            --generations $Generations `
+            --crossover_rate $CrossoverRate `
+            --mutation_rate $MutationRate `
+            --elitismo `
+            --seed $Seed
+    }
+    else {
+        python src/main.py `
+            --variant $Variant `
+            --data $DataFile `
+            --output $OutputDir `
+            --population $Population `
+            --generations $Generations `
+            --crossover_rate $CrossoverRate `
+            --mutation_rate $MutationRate `
+            --elitismo
+    }
+} catch {
     Handle-Error "Algoritmo Genético Estándar falló."
 }
 

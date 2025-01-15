@@ -1,12 +1,12 @@
 # src/genetic_algorithm.py
 
-import random
 import numpy as np
+import random
 from src.fitness import fitness_pop, calcular_coste
 from src.selection import seleccion_torneo
 from src.crossover import cruce_pmx
 from src.mutation import mutacion_swap
-
+from src.optimization import optimizacion_2opt
 
 def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=None):
     """
@@ -14,12 +14,12 @@ def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=No
 
     Args:
         n (int): Número de instalaciones/localizaciones.
-        flujo_matrix (numpy.ndarray): Matriz de flujos.
-        distancia_matrix (numpy.ndarray): Matriz de distancias.
+        flujo_matrix (numpy.ndarray): Matriz de flujos, shape=(n, n).
+        distancia_matrix (numpy.ndarray): Matriz de distancias, shape=(n, n).
         parametros (dict, optional): Parámetros del Algoritmo Genético.
 
     Returns:
-        tuple: Mejor solución encontrada y su historial de fitness.
+        tuple: Mejor solución encontrada (individuo, coste) y su historial de fitness.
     """
     if parametros is None:
         parametros = {
@@ -61,6 +61,7 @@ def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=No
             hijo1 = mutacion_swap(hijo1, parametros['tasa_mutacion'])
             hijo2 = mutacion_swap(hijo2, parametros['tasa_mutacion'])
 
+            # Añadir los hijos a la nueva población
             nueva_poblacion.extend([hijo1, hijo2])
 
         # Convertir a array de NumPy y truncar si es necesario
@@ -81,7 +82,6 @@ def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=No
 
     return mejor_solucion, historial
 
-
 def generar_individuo(n):
     """
     Genera un individuo aleatorio para la población.
@@ -90,7 +90,7 @@ def generar_individuo(n):
         n (int): Número de instalaciones/localizaciones.
 
     Returns:
-        numpy.ndarray: Permutación aleatoria de asignaciones.
+        numpy.ndarray: Permutación aleatoria de asignaciones, shape=(n,).
     """
     individuo = np.arange(n)
     np.random.shuffle(individuo)

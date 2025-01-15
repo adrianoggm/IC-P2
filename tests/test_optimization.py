@@ -5,6 +5,11 @@ import numpy as np
 from src.optimization import optimizacion_2opt, calcular_coste
 
 class TestOptimization(unittest.TestCase):
+    def setUp(self):
+        # Fijar la semilla para reproducibilidad
+        self.seed = 42
+        np.random.seed(self.seed)
+    
     def test_optimizacion_2opt_mejora(self):
         # Crear un individuo con una asignación no óptima
         individuo = np.array([0, 2, 1, 3])
