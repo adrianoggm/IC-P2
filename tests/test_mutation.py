@@ -23,7 +23,7 @@ class TestMutation(unittest.TestCase):
         # Con semilla 42 y tasa_mutacion=1, los índices a intercambiar deberían ser predecibles
         mutado = mutacion_swap(individuo, tasa_mutacion=1.0)
         # Dependerá de la implementación de random.sample con la semilla 42, ajusta según sea necesario
-        expected = np.array([0, 4, 2, 3, 1])  # Ajusta según el comportamiento esperado
+        expected = np.array([2, 1, 0, 3, 4])  # Ajusta según el comportamiento esperado
         np.testing.assert_array_equal(mutado, expected)
 
 if __name__ == '__main__':

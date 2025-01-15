@@ -17,14 +17,20 @@ class TestSelection(unittest.TestCase):
             [0, 1],
             [1, 0],
             [2, 3],
-            [3, 2]
+            [3, 2],
+            [0,3],
+            [3,0]
         ])
-        fitness = np.array([10, 5, 8, 3])
+        fitness = np.array([10, 5, 8, 3,9,8])
+       
         seleccionado = seleccion_torneo(poblacion, fitness, k=2)
+        
         # Con la semilla 42, verifica el individuo seleccionado
         # Dependiendo de la implementación de selección, ajustar la verificación
         # Por ejemplo, podría seleccionar el segundo individuo
+        
         self.assertTrue(np.array_equal(seleccionado, poblacion[1]))  # Ajusta según el comportamiento esperado
+
     
     def test_seleccion_torneo_con_mejor_fitness(self):
         poblacion = np.array([

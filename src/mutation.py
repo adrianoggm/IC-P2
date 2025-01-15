@@ -17,5 +17,5 @@ def mutacion_swap(individuo, tasa_mutacion):
     individuo_mutado = individuo.copy()
     if random.random() < tasa_mutacion:
         i, j = random.sample(range(len(individuo)), 2)
-        individuo_mutado[i], individuo_mutado[j] = individuo[j], individuo[i]
+        individuo_mutado[i], individuo_mutado[j] = individuo_mutado[j], individuo_mutado[i]
     return individuo_mutado
