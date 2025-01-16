@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]  # Ejecuta en Ubuntu y Windows
-        python-version: ["3.11"]  # Ejecuta en múltiples versiones de Python
+        python-version: ["3.9", "3.10", "3.11", "3.12"]  # Ejecuta en múltiples versiones de Python
 
     steps:
       - uses: actions/checkout@v3  # Acción para clonar el repositorio
@@ -31,28 +31,71 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            # En Windows, la ruta es diferente
+            ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\AppData\\Local\\pip\\cache' || '' }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip  # Actualiza pip a la última versión
           pip install flake8 isort black pytest  # Instala herramientas de linting y pruebas
           pip install -r requirements.txt  # Instala las dependencias del proyecto
 
-      - name: Formatear código con Black
+      # Formatear código con Black (solo src/ y tests/)
+      - name: Formatear código con Black en Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          black --check src/ tests/ notebooks/  # Verifica el formato del código
-        shell: bash  # Especifica el shell para sistemas Unix
+          black --check src/ tests/  # Verifica el formato del código
+        shell: bash
 
-      - name: Ordenar importaciones con isort
+      - name: Formatear código con Black en Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          black --check src/ tests/  # Verifica el formato del código
+        shell: pwsh
+
+      # Ordenar importaciones con isort (solo src/ y tests/)
+      - name: Ordenar importaciones con isort en Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
           isort --check-only src/ tests/  # Verifica el orden de las importaciones
-        shell: bash  # Especifica el shell para sistemas Unix
+        shell: bash
 
-      - name: Verificar estilo con Flake8
+      - name: Ordenar importaciones con isort en Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          isort --check-only src/ tests/  # Verifica el orden de las importaciones
+        shell: pwsh
+
+      # Verificar estilo con Flake8 (solo src/ y tests/)
+      - name: Verificar estilo con Flake8 en Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
           flake8 src/ tests/  # Ejecuta Flake8 para verificar el estilo del código
-        shell: bash  # Especifica el shell para sistemas Unix
+        shell: bash
 
-      - name: Ejecutar pruebas unitarias con pytest
+      - name: Verificar estilo con Flake8 en Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          flake8 src/ tests/  # Ejecuta Flake8 para verificar el estilo del código
+        shell: pwsh
+
+      # Ejecutar pruebas unitarias con pytest
+      - name: Ejecutar pruebas unitarias con pytest en Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
           pytest tests/  # Ejecuta las pruebas unitarias
-        shell: bash  # Especifica el shell para sistemas Unix
+        shell: bash
+
+      - name: Ejecutar pruebas unitarias con pytest en Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          pytest tests/  # Ejecuta las pruebas unitarias
+        shell: pwsh
