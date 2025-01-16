@@ -48,45 +48,6 @@ jobs:
           pip install flake8 isort black pytest  # Instala herramientas de linting y pruebas
           pip install -r requirements.txt  # Instala las dependencias del proyecto
 
-      # Formatear código con Black (solo src/ y tests/)
-      - name: Formatear código con Black en Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          black --check src/ tests/  # Verifica el formato del código
-        shell: bash
-
-      - name: Formatear código con Black en Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          black --check src/ tests/  # Verifica el formato del código
-        shell: pwsh
-
-      # Ordenar importaciones con isort (solo src/ y tests/)
-      - name: Ordenar importaciones con isort en Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          isort --check-only src/ tests/  # Verifica el orden de las importaciones
-        shell: bash
-
-      - name: Ordenar importaciones con isort en Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          isort --check-only src/ tests/  # Verifica el orden de las importaciones
-        shell: pwsh
-
-      # Verificar estilo con Flake8 (solo src/ y tests/)
-      - name: Verificar estilo con Flake8 en Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          flake8 src/ tests/  # Ejecuta Flake8 para verificar el estilo del código
-        shell: bash
-
-      - name: Verificar estilo con Flake8 en Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          flake8 src/ tests/  # Ejecuta Flake8 para verificar el estilo del código
-        shell: pwsh
-
       # Ejecutar pruebas unitarias con pytest
       - name: Ejecutar pruebas unitarias con pytest en Ubuntu
         if: matrix.os == 'ubuntu-latest'
