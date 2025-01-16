@@ -1,46 +1,58 @@
+# Este flujo de trabajo instalará dependencias de Python, ejecutará pruebas y realizará linting
+# en múltiples sistemas operativos y versiones de Python.
+# Para más información, visita: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
 name: CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ "dev", "main" ]  # Se ejecuta en las ramas "dev" y "main"
   pull_request:
-    branches: [ main, dev ]
+    branches: [ "dev", "main" ]  # Se ejecuta en pull requests dirigidos a "dev" y "main"
+
+permissions:
+  contents: read  # Permisos de lectura para el contenido del repositorio
 
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}  # Ejecuta en el sistema operativo definido en la matriz
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Ejecuta en Ubuntu y Windows
+        python-version: ["3.9", "3.10", "3.11", "3.12"]  # Ejecuta en múltiples versiones de Python
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v3  # Acción para clonar el repositorio
+      
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4  # Acción para configurar la versión de Python
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Configurar Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.11'
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip  # Actualiza pip a la última versión
+          pip install flake8 isort black pytest  # Instala herramientas de linting y pruebas
+          pip install -r requirements.txt  # Instala las dependencias del proyecto
 
-    - name: Instalar dependencias
-      run: |
-        .\venv\Scripts\Activate.ps1
-        pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Formatear código con Black
+        run: |
+          black --check src/ tests/ notebooks/  # Verifica el formato del código
+        shell: bash  # Especifica el shell para sistemas Unix
 
-    - name: Formatear código con Black
-      run: |
-        .\venv\Scripts\Activate.ps1
-        black --check src/ tests/ notebooks/
+      - name: Ordenar importaciones con isort
+        run: |
+          isort --check-only src/ tests/  # Verifica el orden de las importaciones
+        shell: bash  # Especifica el shell para sistemas Unix
 
-    - name: Ordenar importaciones con isort
-      run: |
-        .\venv\Scripts\Activate.ps1
-        isort --check-only src/ tests/
+      - name: Verificar estilo con Flake8
+        run: |
+          flake8 src/ tests/  # Ejecuta Flake8 para verificar el estilo del código
+        shell: bash  # Especifica el shell para sistemas Unix
 
-    - name: Verificar estilo con Flake8
-      run: |
-        .\venv\Scripts\Activate.ps1
-        flake8 src/ tests/
-
-    - name: Ejecutar pruebas unitarias
-      run: |
-        .\venv\Scripts\Activate.ps1
-        pytest tests/
+      - name: Ejecutar pruebas unitarias con pytest
+        run: |
+          pytest tests/  # Ejecuta las pruebas unitarias
+        shell: bash  # Especifica el shell para sistemas Unix
