@@ -17,11 +17,10 @@ jobs:
     - name: Configurar Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
     - name: Instalar dependencias
       run: |
-        python -m venv venv
         .\venv\Scripts\Activate.ps1
         pip install --upgrade pip
         pip install -r requirements.txt
