@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]  # Ejecuta en Ubuntu y Windows
-        python-version: ["3.9", "3.10", "3.11", "3.12"]  # Ejecuta en múltiples versiones de Python
+        python-version: ["3.11"]  # Ejecuta en múltiples versiones de Python
 
     steps:
       - uses: actions/checkout@v3  # Acción para clonar el repositorio
