@@ -30,21 +30,35 @@ def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=No
             'elitismo': True
         }
 
-    # Inicializar población como un array de NumPy
-    poblacion = np.array([generar_individuo(n) for _ in range(parametros['poblacion'])])
+    print("Inicializando población")
+    poblacion = []
+    mitad_poblacion = parametros['poblacion'] // 2
+
+    # Generar la primera mitad de la población de forma aleatoria
+    for _ in range(mitad_poblacion):
+        individuo = generar_individuo(n)
+        poblacion.append(individuo)
+
+    # Generar la segunda mitad de la población usando la heurística greedy
+    for _ in range(parametros['poblacion'] - mitad_poblacion):
+        individuo = generar_individuo_greedy(n, flujo_matrix, distancia_matrix)
+        poblacion.append(individuo)
+
+    poblacion = np.array(poblacion)
     fitness = fitness_pop(poblacion, flujo_matrix, distancia_matrix)
 
     historial = []
     mejor_idx = np.argmin(fitness)
     mejor_solucion = (poblacion[mejor_idx], fitness[mejor_idx])
     historial.append(mejor_solucion[1])
+    print(f"Generación 0: Mejor fitness = {mejor_solucion[1]}")
 
     for gen in range(parametros['generaciones']):
         nueva_poblacion = []
 
         # Elitismo: mantener el mejor individuo
         if parametros['elitismo']:
-            nueva_poblacion.append(mejor_solucion[0])
+            nueva_poblacion.append(mejor_solucion[0].copy())
 
         while len(nueva_poblacion) < parametros['poblacion']:
             # Selección
@@ -76,7 +90,7 @@ def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=No
         if mejor_gen[1] < mejor_solucion[1]:
             mejor_solucion = mejor_gen
 
-        # Opcional: Imprimir progreso
+        # Imprimir progreso cada 100 generaciones y en la primera generación
         if (gen + 1) % 100 == 0 or gen == 0:
             print(f"Generación {gen + 1}: Mejor fitness = {mejor_solucion[1]}")
 
@@ -95,3 +109,35 @@ def generar_individuo(n):
     individuo = np.arange(n)
     np.random.shuffle(individuo)
     return individuo
+
+def generar_individuo_greedy(n, flujo_matrix, distancia_matrix):
+    """
+    Genera un individuo utilizando una heurística greedy.
+    Asigna las instalaciones con mayor flujo total a las ubicaciones con menor distancia total.
+
+    Args:
+        n (int): Número de instalaciones/localizaciones.
+        flujo_matrix (numpy.ndarray): Matriz de flujos, shape=(n, n).
+        distancia_matrix (numpy.ndarray): Matriz de distancias, shape=(n, n).
+
+    Returns:
+        numpy.ndarray: Permutación resultante de la heurística greedy, shape=(n,).
+    """
+    # Calcular el flujo total para cada instalación (suma de filas)
+    flujo_total = np.sum(flujo_matrix, axis=1)
+
+    # Calcular la distancia total para cada ubicación (suma de filas)
+    distancia_total = np.sum(distancia_matrix, axis=1)
+
+    # Ordenar instalaciones por flujo total descendente
+    instalaciones_ordenadas = np.argsort(-flujo_total)
+
+    # Ordenar ubicaciones por distancia total ascendente
+    ubicaciones_ordenadas = np.argsort(distancia_total)
+
+    # Asignar instalaciones a ubicaciones
+    asignacion = np.empty(n, dtype=int)
+    for i in range(n):
+        asignacion[ubicaciones_ordenadas[i]] = instalaciones_ordenadas[i]
+
+    return asignacion
