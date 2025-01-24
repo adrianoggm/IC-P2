@@ -180,4 +180,8 @@ genetic-algorithm-qap/
 
 python -m src.main --variant standard --data data/raw/tai256c.dat --output results/standard_ga/ --population 150 --generations 2000 --crossover_rate 0.9 --mutation_rate 0.05 --elitismo --seed 42
 
-python -m src.main --variant standard --data data/raw/tai256c.dat --output results/standard_ga/ --population 300 --generations 2000 --crossover_rate 0.9 --mutation_rate 0.08 --elitismo --seed 42
+python -m src.main --variant standard --data data/raw/tai256c.dat --output results/standard_ga/ --population 300 --generations 3000 --crossover_rate 0.9 --mutation_rate 0.08 --elitismo --seed 42
+
+python -m src.main --variant baldwinian --data data/raw/tai256c.dat --output results/baldwinian/ --population 300 --generations 3000 --crossover_rate 0.9 --mutation_rate 0.08 --elitismo --seed 42
+
+python -m src.main --variant baldwinian --data data/raw/tai256c.dat --output results/baldwinian/ --population 500 --generations 500 --crossover_rate 0.9 --mutation_rate 0.12 --elitismo --seed 42 --hill_climbing_max_iter 10 --opt_population_size 20

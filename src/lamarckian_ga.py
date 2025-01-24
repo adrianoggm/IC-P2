@@ -1,23 +1,23 @@
-# src/lamarckian_ga.py
-
 import numpy as np
 import random
-from src.fitness import fitness_pop, calcular_coste
+from src.fitness import fitness_pop
 from src.selection import seleccion_torneo
 from src.crossover import cruce_pmx
 from src.mutation import mutacion_swap
-from src.optimization import optimizacion_2opt
-
+from src.optimization import optimizar_individuo_busqueda_local, generar_poblacion
 
 def ejecutar_varianta_lamarckiana(n, flujo_matrix, distancia_matrix, parametros=None):
     """
-    Ejecuta la Variante Lamarckiana del Algoritmo Genético para el QAP.
+    Ejecuta la Variante Lamarckiana del Algoritmo Genético para el QAP utilizando Búsqueda Local con máscara booleana para la evaluación del fitness.
+
+    En la variante Lamarckiana, las mejoras realizadas durante la búsqueda local se incorporan directamente en los individuos de la población,
+    lo que significa que la información aprendida se transmite a la población genética.
 
     Args:
         n (int): Número de instalaciones/localizaciones.
         flujo_matrix (numpy.ndarray): Matriz de flujos.
         distancia_matrix (numpy.ndarray): Matriz de distancias.
-        parametros (dict, optional): Parámetros del Algoritmo Genético.
+        parametros (dict, optional): Parámetros del Algoritmo Genético y Búsqueda Local.
 
     Returns:
         tuple: Mejor solución encontrada y su historial de fitness.
@@ -28,31 +28,49 @@ def ejecutar_varianta_lamarckiana(n, flujo_matrix, distancia_matrix, parametros=
             'generaciones': 500,
             'tasa_cruce': 0.8,
             'tasa_mutacion': 0.02,
-            'elitismo': True
+            'elitismo': True,
+            'tam_poblacion_opt': 50,  # Tamaño de la población a optimizar
+            'hill_climbing_max_iter': 1000
         }
 
-    # Inicializar población como un array de NumPy
-    poblacion = np.array([generar_individuo(n) for _ in range(parametros['poblacion'])])
-    # Aplicar optimización local a cada individuo y actualizar la población
-    poblacion_mejorada = np.array([optimizar_individuo(ind, flujo_matrix, distancia_matrix) for ind in poblacion])
-    fitness = fitness_pop(poblacion_mejorada, flujo_matrix, distancia_matrix)
+    # Inicializar población
+    print("Generando población inicial...")
+    poblacion = generar_poblacion(parametros['poblacion'], n, seed=196917)
 
+    # Verificar la validez de la población
+    print("Verificando la validez de la población inicial...")
+    for idx, ind in enumerate(poblacion):
+        assert set(ind) == set(range(n)), f"El individuo {idx} no es una permutación válida."
+
+    # Aplicar optimización local a una parte de la población inicial
+    print("Aplicando búsqueda local a la población inicial...")
+    indices_opt = np.random.choice(len(poblacion), parametros['tam_poblacion_opt'], replace=False)
+    for idx in indices_opt:
+        poblacion[idx], _ = optimizar_individuo_busqueda_local(
+            poblacion[idx], flujo_matrix, distancia_matrix, max_iter=parametros['hill_climbing_max_iter']
+        )
+
+    fitness = fitness_pop(poblacion, flujo_matrix, distancia_matrix)
+
+    # Inicializar historial y encontrar la mejor solución inicial
     historial = []
     mejor_idx = np.argmin(fitness)
-    mejor_solucion = (poblacion_mejorada[mejor_idx], fitness[mejor_idx])
+    mejor_solucion = (poblacion[mejor_idx], fitness[mejor_idx])
     historial.append(mejor_solucion[1])
+
+    print(f"Generación 0: Mejor fitness = {mejor_solucion[1]}")
 
     for gen in range(parametros['generaciones']):
         nueva_poblacion = []
 
         # Elitismo: mantener el mejor individuo
         if parametros['elitismo']:
-            nueva_poblacion.append(mejor_solucion[0])
+            nueva_poblacion.append(poblacion[mejor_idx].copy())
 
         while len(nueva_poblacion) < parametros['poblacion']:
             # Selección
-            padre1 = seleccion_torneo(poblacion_mejorada, fitness)
-            padre2 = seleccion_torneo(poblacion_mejorada, fitness)
+            padre1 = seleccion_torneo(poblacion, fitness)
+            padre2 = seleccion_torneo(poblacion, fitness)
 
             # Cruce
             if random.random() < parametros['tasa_cruce']:
@@ -64,59 +82,46 @@ def ejecutar_varianta_lamarckiana(n, flujo_matrix, distancia_matrix, parametros=
             hijo1 = mutacion_swap(hijo1, parametros['tasa_mutacion'])
             hijo2 = mutacion_swap(hijo2, parametros['tasa_mutacion'])
 
-            # Optimización Local y actualización de la población
-            hijo1_mejorado, _ = optimizacion_2opt(hijo1, flujo_matrix, distancia_matrix)
-            hijo2_mejorado, _ = optimizacion_2opt(hijo2, flujo_matrix, distancia_matrix)
+            # Verificar que los hijos son permutaciones válidas
+            #assert set(hijo1) == set(range(n)), "Hijo1 no es una permutación válida después de mutación."
+            #assert set(hijo2) == set(range(n)), "Hijo2 no es una permutación válida después de mutación."
 
-            nueva_poblacion.extend([hijo1_mejorado, hijo2_mejorado])
+            # Aplicar optimización local a los hijos (Lamarckiano: incorporar aprendizaje)
+            hijo1, _ = optimizar_individuo_busqueda_local(
+                hijo1, flujo_matrix, distancia_matrix, max_iter=parametros['hill_climbing_max_iter']
+            )
+            hijo2, _ = optimizar_individuo_busqueda_local(
+                hijo2, flujo_matrix, distancia_matrix, max_iter=parametros['hill_climbing_max_iter']
+            )
+
+            nueva_poblacion.extend([hijo1, hijo2])
 
         # Convertir a array de NumPy y truncar si es necesario
         poblacion = np.array(nueva_poblacion[:parametros['poblacion']])
-        # Calcular fitness de la nueva población
-        poblacion_mejorada = poblacion.copy()
-        fitness = fitness_pop(poblacion_mejorada, flujo_matrix, distancia_matrix)
+
+        # Verificar la validez de la nueva población
+        #for idx, ind in enumerate(poblacion):
+            #assert set(ind) == set(range(n)), f"El individuo {idx} no es una permutación válida."
+
+        # Aplicar optimización local a una parte de la nueva población
+        indices_opt = np.random.choice(len(poblacion), parametros['tam_poblacion_opt'], replace=False)
+        for idx in indices_opt:
+            poblacion[idx], _ = optimizar_individuo_busqueda_local(
+                poblacion[idx], flujo_matrix, distancia_matrix, max_iter=parametros['hill_climbing_max_iter']
+            )
+
+        fitness = fitness_pop(poblacion, flujo_matrix, distancia_matrix)
 
         # Actualizar el mejor individuo
         mejor_idx = np.argmin(fitness)
-        mejor_gen = (poblacion_mejorada[mejor_idx], fitness[mejor_idx])
+        mejor_gen = (poblacion[mejor_idx], fitness[mejor_idx])
         historial.append(mejor_gen[1])
 
         if mejor_gen[1] < mejor_solucion[1]:
             mejor_solucion = mejor_gen
 
-        # Opcional: Imprimir progreso
+        # Imprimir progreso cada 100 generaciones y al inicio
         if (gen + 1) % 100 == 0 or gen == 0:
             print(f"Generación {gen + 1}: Mejor fitness = {mejor_solucion[1]}")
 
     return mejor_solucion, historial
-
-
-def generar_individuo(n):
-    """
-    Genera un individuo aleatorio para la población.
-
-    Args:
-        n (int): Número de instalaciones/localizaciones.
-
-    Returns:
-        numpy.ndarray: Permutación aleatoria de asignaciones.
-    """
-    individuo = np.arange(n)
-    np.random.shuffle(individuo)
-    return individuo
-
-
-def optimizar_individuo(individuo, flujo_matrix, distancia_matrix):
-    """
-    Aplica la optimización local 2-opt a un individuo.
-
-    Args:
-        individuo (numpy.ndarray): Individuo a optimizar.
-        flujo_matrix (numpy.ndarray): Matriz de flujos.
-        distancia_matrix (numpy.ndarray): Matriz de distancias.
-
-    Returns:
-        tuple: Individuo optimizado y su coste.
-    """
-    optimizado, coste = optimizacion_2opt(individuo, flujo_matrix, distancia_matrix)
-    return optimizado, coste
