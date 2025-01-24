@@ -6,7 +6,7 @@ from src.fitness import fitness_pop, calcular_coste
 from src.selection import seleccion_torneo
 from src.crossover import cruce_pmx
 from src.mutation import mutacion_swap
-from src.optimization import optimizacion_2opt
+
 
 def ejecutar_algoritmo_genetico(n, flujo_matrix, distancia_matrix, parametros=None):
     """

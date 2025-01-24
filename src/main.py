@@ -1,5 +1,3 @@
-# src/main.py
-
 import argparse
 import logging
 import os
@@ -106,6 +104,12 @@ def main():
     parser.add_argument('--seed', type=int, default=None,
                         help='Semilla para los generadores de números aleatorios')
 
+    # Opcionales: Parámetros de Búsqueda Local
+    parser.add_argument('--hill_climbing_max_iter', type=int, default=1000,
+                        help='Número máximo de iteraciones para Hill Climbing')
+    parser.add_argument('--opt_population_size', type=int, default=50,
+                        help='Tamaño de la población a optimizar mediante Búsqueda Local')
+
     args = parser.parse_args()
 
     # Crear directorio de salida si no existe
@@ -119,7 +123,6 @@ def main():
     if args.seed is not None:
         fijar_semilla(args.seed)
     else:
-        # Opcional: fijar una semilla predeterminada o dejarla aleatoria
         logging.info("No se proporcionó semilla. Usando una semilla aleatoria.")
 
     # Cargar datos
@@ -140,16 +143,27 @@ def main():
         'elitismo': args.elitismo
     }
 
+    # Definir parámetros adicionales para Baldwinian y Lamarckian
+    parametros2 = {
+        'poblacion': args.population,
+        'generaciones': args.generations,
+        'tasa_cruce': args.crossover_rate,
+        'tasa_mutacion': args.mutation_rate,
+        'elitismo': args.elitismo,
+        'tam_poblacion_opt': args.opt_population_size,  # Tamaño de población a optimizar
+        'hill_climbing_max_iter': args.hill_climbing_max_iter
+    }
+
     # Ejecutar la variante seleccionada
     try:
         if args.variant == 'standard':
             mejor_solucion, historial = ejecutar_algoritmo_genetico(n, flow_matrix, distance_matrix, parametros)
             logging.info("Algoritmo Genético Estándar ejecutado con éxito.")
         elif args.variant == 'baldwinian':
-            mejor_solucion, historial = ejecutar_varianta_baldwiniana(n, flow_matrix, distance_matrix, parametros)
+            mejor_solucion, historial = ejecutar_varianta_baldwiniana(n, flow_matrix, distance_matrix, parametros2)
             logging.info("Variante Baldwiniana ejecutada con éxito.")
         elif args.variant == 'lamarckian':
-            mejor_solucion, historial = ejecutar_varianta_lamarckiana(n, flow_matrix, distance_matrix, parametros)
+            mejor_solucion, historial = ejecutar_varianta_lamarckiana(n, flow_matrix, distance_matrix, parametros2)
             logging.info("Variante Lamarckiana ejecutada con éxito.")
     except Exception as e:
         logging.error(f"Error durante la ejecución de la variante {args.variant}: {e}")
